@@ -26,8 +26,9 @@
     }
   </style>
   <script>
-    // Polyfill for process.env in browser
-    window.process = { env: {} };
+    // Robust polyfill for process.env
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
   </script>
 <script type="importmap">
 {

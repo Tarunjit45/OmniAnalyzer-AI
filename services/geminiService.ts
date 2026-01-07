@@ -1,9 +1,13 @@
-
 import { GoogleGenAI, Type, Chat } from "@google/genai";
 import { fileToBase64, getSafeMimeType } from "../utils/fileUtils";
 
+const getApiKey = () => {
+  const env = (window as any).process?.env || {};
+  return env.API_KEY || env.NEXT_PUBLIC_API_KEY || env.VITE_API_KEY || '';
+};
+
 export const analyzeFile = async (file: File) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   const base64Data = await fileToBase64(file);
   const mimeType = getSafeMimeType(file);
 
@@ -77,7 +81,7 @@ export const analyzeFile = async (file: File) => {
 };
 
 export const createChatSession = (fileData: string, mimeType: string, fileName: string): Chat => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: getApiKey() });
   return ai.chats.create({
     model: "gemini-3-pro-preview",
     config: {

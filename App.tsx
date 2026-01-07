@@ -67,9 +67,14 @@ export default function App() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const key = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
+    // Check multiple possible locations for the API key in the browser context
+    const env = (window as any).process?.env || {};
+    const key = env.API_KEY || env.NEXT_PUBLIC_API_KEY || env.VITE_API_KEY;
+    
     if (!key || key === 'undefined' || key === '') {
       setApiKeyMissing(true);
+    } else {
+      setApiKeyMissing(false);
     }
   }, []);
 
@@ -161,7 +166,16 @@ export default function App() {
           <div className="p-4 bg-slate-50 rounded-2xl text-xs font-mono text-slate-400 text-left border border-slate-100">
             Vercel Dashboard &gt; Settings &gt; Environment Variables &gt; Add API_KEY
           </div>
-          <p className="mt-6 text-xs text-slate-400">If you just added it, you might need to redeploy the app.</p>
+          <p className="mt-6 text-xs text-slate-400 font-medium">
+            Crucial: You must <span className="text-indigo-600 font-bold">Redeploy</span> the project after adding the key for it to take effect.
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-8 flex items-center justify-center gap-2 mx-auto px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold active:scale-95"
+          >
+            <RefreshCcw size={16} />
+            Refresh App
+          </button>
         </div>
       </div>
     );
