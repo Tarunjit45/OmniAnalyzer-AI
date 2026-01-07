@@ -70,7 +70,8 @@ export default function App() {
 
   useEffect(() => {
     // Check if API key exists in the environment
-    if (!process.env.API_KEY || process.env.API_KEY === 'undefined') {
+    const key = process.env.API_KEY;
+    if (!key || key === 'undefined' || key === '') {
       setApiKeyMissing(true);
     }
   }, []);
@@ -107,7 +108,7 @@ export default function App() {
       setStatus(AnalysisStatus.SUCCESS);
     } catch (err: any) {
       console.error(err);
-      setError("I'm having a little trouble reading this file. It might be complex, password-protected, or in a format I'm still learning.");
+      setError("I'm having a little trouble reading this file. Please make sure your API key is correct and valid.");
       setStatus(AnalysisStatus.ERROR);
     }
   };
@@ -158,12 +159,12 @@ export default function App() {
           </div>
           <h1 className="text-3xl font-black text-slate-900 mb-4">API Key Required</h1>
           <p className="text-slate-600 mb-8 leading-relaxed font-medium">
-            To use OmniAnalyze, you need to set your <span className="text-indigo-600 font-bold">API_KEY</span> in the environment variables. 
-            Please check your Vercel project settings.
+            To use OmniAnalyze, you need to set your <span className="text-indigo-600 font-bold">API_KEY</span> in your Vercel Environment Variables.
           </p>
           <div className="p-4 bg-slate-50 rounded-2xl text-xs font-mono text-slate-400 text-left border border-slate-100">
-            Settings > Environment Variables > API_KEY
+            Vercel Dashboard > Settings > Environment Variables > Add API_KEY
           </div>
+          <p className="mt-6 text-xs text-slate-400">If you just added it, you might need to redeploy the app.</p>
         </div>
       </div>
     );
