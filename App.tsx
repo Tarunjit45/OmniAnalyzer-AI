@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { AnalysisStatus, AnalysisResult, ChatMessage } from './types';
 import { analyzeFile, createChatSession } from './services/geminiService';
@@ -15,7 +14,6 @@ import {
   Send,
   User,
   Bot,
-  Trash2,
   AlertTriangle,
   ShieldAlert,
   ArrowRight,
@@ -33,7 +31,7 @@ const LoadingState = () => (
     </div>
     <h3 className="text-2xl font-bold text-slate-800 tracking-tight text-center px-4">Analyzing every detail...</h3>
     <p className="mt-3 text-slate-500 max-w-sm text-center font-medium leading-relaxed px-6 text-sm md:text-base">
-      I'm breaking down the file into simple bits so I can explain it to you clearly.
+      I&apos;m breaking down the file into simple bits so I can explain it to you clearly.
     </p>
   </div>
 );
@@ -43,7 +41,7 @@ const ErrorState = ({ error, onRetry }: { error: string, onRetry: () => void }) 
     <div className="bg-red-50 p-6 rounded-full mb-6">
       <AlertCircle size={48} className="text-red-500" />
     </div>
-    <h3 className="text-2xl font-bold text-slate-900 mb-3">Something didn't work</h3>
+    <h3 className="text-2xl font-bold text-slate-900 mb-3">Something didn&apos;t work</h3>
     <p className="text-slate-600 mb-8 text-sm md:text-base leading-relaxed">{error}</p>
     <button 
       onClick={onRetry}
@@ -69,8 +67,7 @@ export default function App() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if API key exists in the environment
-    const key = process.env.API_KEY;
+    const key = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : null;
     if (!key || key === 'undefined' || key === '') {
       setApiKeyMissing(true);
     }
@@ -162,7 +159,7 @@ export default function App() {
             To use OmniAnalyze, you need to set your <span className="text-indigo-600 font-bold">API_KEY</span> in your Vercel Environment Variables.
           </p>
           <div className="p-4 bg-slate-50 rounded-2xl text-xs font-mono text-slate-400 text-left border border-slate-100">
-            Vercel Dashboard > Settings > Environment Variables > Add API_KEY
+            Vercel Dashboard &gt; Settings &gt; Environment Variables &gt; Add API_KEY
           </div>
           <p className="mt-6 text-xs text-slate-400">If you just added it, you might need to redeploy the app.</p>
         </div>
@@ -189,10 +186,10 @@ export default function App() {
           <div className="text-center mb-12 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
             <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight px-2">
               Upload any file. <br /> 
-              I'll explain it <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">simply.</span>
+              I&apos;ll explain it <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">simply.</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto font-medium leading-relaxed px-4">
-              From confusing code to strange documents, I'll tell you what they really are and if they're safe.
+              From confusing code to strange documents, I&apos;ll tell you what they really are and if they&apos;re safe.
             </p>
 
             <div className="relative group max-w-2xl mx-auto mt-8 md:mt-12">
@@ -292,7 +289,10 @@ export default function App() {
                     </div>
                   </div>
                 ))}
-                {isChatting && <div className="flex justify-start animate-pulse"><Bot size={18} /> Typing...</div>}
+                {isChatting && <div className="flex justify-start items-center gap-2 p-4 text-slate-400 font-bold italic animate-pulse">
+                  <Bot size={18} /> 
+                  Thinking...
+                </div>}
                 <div ref={chatEndRef} />
               </div>
 
@@ -328,27 +328,10 @@ export default function App() {
              </p>
            </div>
            <p className="text-indigo-600 font-black text-xs md:text-sm uppercase tracking-tighter">
-             Designed and Developed by <span className="text-slate-900">Your Name</span>
+             Designed and Developed with Gemini AI
            </p>
         </div>
       </footer>
     </div>
   );
 }
-
-const ChevronRight = ({ className, size }: { className?: string, size?: number }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size || 24} 
-    height={size || 24} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="4" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="m9 18 6-6-6-6"/>
-  </svg>
-);
