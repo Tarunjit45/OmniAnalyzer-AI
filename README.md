@@ -13,9 +13,9 @@ OmniAnalyze doesn't just scan files; it explains them. Whether it's a suspicious
 - **Vercel Ready**: Pre-configured for instant deployment.
 
 ## 🛠️ Technical Stack
-- **Frontend**: React 19 (ESM)
+- **Frontend**: React 19 (ES6+)
 - **Styling**: Tailwind CSS
-- **AI Engine**: Google Gemini 3 Pro via `@google/genai`
+- **AI Engine**: Google Gemini 3 Pro
 - **Icons**: Lucide React
 
 ## 📦 Deployment on Vercel
@@ -27,4 +27,4 @@ OmniAnalyze doesn't just scan files; it explains them. Whether it's a suspicious
 
 ---
 **Built to Protect • 2024**
-*Designed and Developed by [Your Name]*
+*Designed and Developed by Senior Engineer*
