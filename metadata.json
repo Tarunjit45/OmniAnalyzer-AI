@@ -1,0 +1,5 @@
+{
+  "name": "OmniAnalyzer AI",
+  "description": "A sophisticated file analysis tool that uses Gemini 3 Pro to dissect and explain any file type, from PDFs and documents to binary executables and source code.",
+  "requestFramePermissions": []
+}
