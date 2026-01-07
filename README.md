@@ -1,31 +1,47 @@
+# OmniAnalyze 2026 🛡️
 
-# OmniAnalyze PRO
+A state-of-the-art file intelligence platform designed and developed by **Tarunjit Biswas**. OmniAnalyze bridges the gap between complex binary data and human understanding, offering instant safety verdicts and deep content insights.
 
-A human-centric, high-intelligence file analysis tool powered by **Gemini 3 Pro**. Built to bridge the gap between complex file structures and human understanding.
+## 🚀 The Vision
+In an era of increasing digital complexity, OmniAnalyze provides a transparent window into any file. We believe you shouldn't need a degree in cybersecurity to know if a file is safe or what it contains.
 
-## 🚀 Vision
-OmniAnalyze doesn't just scan files; it explains them. Whether it's a suspicious `.exe`, a legal `PDF`, or a dense source code file, OmniAnalyze tells you exactly what's inside in plain English.
+## ✨ Core Features
 
-## ✨ Features
-- **Human-First Analysis**: Get safety verdicts like "Safe," "Caution," or "Danger" in simple terms.
-- **Interactive Assistant**: Chat directly with the file. Ask "Is this good?" or "What does this code do?" and get a human-like response.
-- **Broad Compatibility**: Supports `.html`, `.pdf`, `.docx`, `.exe`, `.zip`, and more.
-- **Mobile Responsive**: Fully optimized for phones, tablets, and desktops.
-- **Vercel Ready**: Pre-configured for instant deployment.
+### 1. Hybrid Intelligence Engine
+- **Free Mode (Signature Scan)**: Performs instant, client-side heuristic analysis using file signatures and magic bytes. No API key or internet required for basic safety checks.
+- **Pro Mode (AI Deep Dive)**: Powered by **Gemini 3 Pro**, this mode performs an exhaustive inspection of file contents, code logic, and hidden metadata.
 
-## 🛠️ Technical Stack
-- **Frontend**: React 19 (ESM)
-- **Styling**: Tailwind CSS
-- **AI Engine**: Google Gemini 3 Pro
-- **Icons**: Lucide React
+### 2. Interactive AI Assistant
+- Chat directly with your documents or code.
+- Ask questions like: *"Is there any hidden tracking code in this HTML?"* or *"Summarize the legal risks in this PDF."*
+- Supports large context windows for complex file analysis.
 
-## 📦 Deployment on Vercel
-1. Push this code to a GitHub repository.
-2. Connect your repository to [Vercel](https://vercel.com).
-3. In the Vercel Dashboard, go to **Settings > Environment Variables**.
-4. Add `API_KEY` and set its value to your [Google AI Studio API Key](https://aistudio.google.com/).
-5. Deploy!
+### 3. Comprehensive File Support
+- **Documents**: PDF, DOCX, TXT, MD.
+- **Web**: HTML, HTM, JS, JSON, SVG.
+- **System**: EXE, MSI, BAT, SH, ZIP, RAR.
+- **Media**: PNG, JPG, WEBP, HEIC.
+
+### 4. Privacy-First Architecture
+- Basic analysis happens entirely on your machine.
+- AI analysis only occurs if you explicitly provide your own API key.
+- No files are stored permanently; all analysis happens in volatile memory.
+
+## 🛠️ Technical Excellence
+- **Frontend**: React 19 (ES6 Modules)
+- **Styling**: Tailwind CSS with a high-end "Glassmorphism" UI.
+- **AI Integration**: Google GenAI SDK (@google/genai).
+- **Icons**: Lucide React.
+- **Performance**: Zero-bundle overhead via ESM imports.
+
+## 👤 Developer
+**Tarunjit Biswas**
+- **LinkedIn**: [Profile](https://www.linkedin.com/in/tarunjit-biswas-a5248131b/)
+- **Email**: [tarunjitbiswas24@gmail.com](mailto:tarunjitbiswas24@gmail.com)
+
+## 📦 Getting Started
+1. **No Setup**: Just drag and drop a file for a standard signature scan.
+2. **AI Power**: Click the **Settings** icon and paste your [Google AI Studio API Key](https://aistudio.google.com/) to unlock Pro features.
 
 ---
-**Built to Protect • 2024**
-*Designed and Developed by [Your Name]*
+**OmniAnalyze • Safeguarding Digital Assets • 2026**
