@@ -2,26 +2,30 @@ import { GoogleGenAI, Type, Chat } from "@google/genai";
 import { fileToBase64, getSafeMimeType } from "../utils/fileUtils";
 
 const getApiKey = () => {
+  // Check Local Storage first (User preference)
+  const stored = localStorage.getItem('omni_api_key');
+  if (stored && stored.trim() !== '') return stored.trim();
+  
+  // Check Environment Variable (Vercel injection)
   const env = (window as any).process?.env || {};
-  return env.API_KEY || env.NEXT_PUBLIC_API_KEY || env.VITE_API_KEY || '';
+  const envKey = env.API_KEY || env.NEXT_PUBLIC_API_KEY || env.VITE_API_KEY;
+  if (envKey && envKey !== 'undefined' && envKey !== '') return envKey;
+  
+  return '';
 };
 
 export const analyzeFile = async (file: File) => {
-  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const key = getApiKey();
+  if (!key) throw new Error("No API key available for deep analysis.");
+
+  const ai = new GoogleGenAI({ apiKey: key });
   const base64Data = await fileToBase64(file);
   const mimeType = getSafeMimeType(file);
 
-  const prompt = `You are an elite security researcher. 
-  I'm giving you a file named "${file.name}". 
-  Note: If the file content appears binary but is sent as text, analyze its structure or signatures.
-  
-  Provide:
-  1. A clear human verdict: SAFE, CAUTION, or DANGER.
-  2. A friendly explanation for a non-technical person.
-  3. Technical breakdown for experts.
-  4. Actionable steps.
-  
-  Format your response as a JSON object strictly following this schema.`;
+  const prompt = `You are a high-level security and file analyst. Analyze the provided file: "${file.name}".
+  Determine its safety and content. Provide a verdict (SAFE, CAUTION, or DANGER) and a simple human-readable explanation.
+  If it contains code, explain what the code does. If it's a document, summarize the intent.
+  Respond strictly in JSON format matching the schema provided.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -30,12 +34,7 @@ export const analyzeFile = async (file: File) => {
         {
           parts: [
             { text: prompt },
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType: mimeType
-              }
-            }
+            { inlineData: { data: base64Data, mimeType: mimeType } }
           ]
         }
       ],
@@ -49,18 +48,13 @@ export const analyzeFile = async (file: File) => {
             summary: { type: Type.STRING },
             simpleExplanation: { type: Type.STRING },
             isDangerous: { type: Type.BOOLEAN },
-            whyItsDangerous: { type: Type.STRING },
-            solutions: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            },
+            solutions: { type: Type.ARRAY, items: { type: Type.STRING } },
             technicalDetails: { type: Type.STRING },
             fileType: { type: Type.STRING },
             metadata: { 
               type: Type.OBJECT, 
               properties: {
                 suggestedApp: { type: Type.STRING },
-                lastModified: { type: Type.STRING },
                 securityLevel: { type: Type.STRING }
               },
               required: ["suggestedApp", "securityLevel"]
@@ -71,35 +65,37 @@ export const analyzeFile = async (file: File) => {
       }
     });
 
-    const text = response.text;
-    if (!text) throw new Error("No response from AI");
-    return JSON.parse(text);
+    const textResult = response.text;
+    if (!textResult) throw new Error("Empty response from Gemini");
+    return JSON.parse(textResult);
   } catch (error) {
-    console.error("Gemini Analysis Error:", error);
+    console.error("Gemini AI Analysis Error:", error);
     throw error;
   }
 };
 
 export const createChatSession = (fileData: string, mimeType: string, fileName: string): Chat => {
-  const ai = new GoogleGenAI({ apiKey: getApiKey() });
+  const key = getApiKey();
+  if (!key) throw new Error("API Key required for chat.");
+  
+  const ai = new GoogleGenAI({ apiKey: key });
   return ai.chats.create({
     model: "gemini-3-pro-preview",
     config: {
-      systemInstruction: `You are a friendly technical assistant. You are helping a user with a file named "${fileName}". 
-      You have access to the file's contents. If the user asks technical questions, answer accurately. 
-      If they are confused, use simple analogies. Always prioritize their digital safety.`,
+      systemInstruction: `You are the OmniAI Assistant. You are currently analyzing a file named "${fileName}" with a user. 
+      You have access to its binary or text content. Be helpful, technical but clear, and always emphasize user security.`,
     },
     history: [
       {
         role: 'user',
         parts: [
           { inlineData: { data: fileData, mimeType: mimeType } },
-          { text: `Hi! I've uploaded "${fileName}". Can you help me understand what's in here and if I should be worried?` }
+          { text: `I've uploaded "${fileName}". Let's discuss it.` }
         ],
       },
       {
         role: 'model',
-        parts: [{ text: `Hello! I've reviewed the file "${fileName}". I can help you understand its structure, content, and safety. What would you like to know first?` }],
+        parts: [{ text: `I have received "${fileName}". I'm ready to explain its contents or answer any technical questions you have about it. How can I help?` }],
       }
     ]
   });

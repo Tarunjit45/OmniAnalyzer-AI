@@ -1,65 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AnalysisStatus, AnalysisResult, ChatMessage } from './types';
 import { analyzeFile, createChatSession } from './services/geminiService';
+import { analyzeFileHardcoded } from './services/analyzer';
 import { formatBytes, fileToBase64, getSafeMimeType } from './utils/fileUtils';
 import { 
-  FileSearch, 
-  Upload, 
-  AlertCircle, 
-  FileText, 
-  CheckCircle2,
-  ShieldCheck,
-  Info,
-  MessageSquare,
-  Send,
-  User,
-  Bot,
-  AlertTriangle,
-  ShieldAlert,
-  ArrowRight,
-  RefreshCcw,
-  KeyRound
+  FileSearch, Upload, AlertCircle, FileText, CheckCircle2,
+  ShieldCheck, Info, MessageSquare, Send, User, Bot,
+  AlertTriangle, ShieldAlert, ArrowRight, RefreshCcw, KeyRound,
+  Settings, Zap, Shield, Sparkles
 } from 'lucide-react';
-
-const LoadingState = () => (
-  <div className="flex flex-col items-center justify-center py-24 animate-in fade-in zoom-in duration-500">
-    <div className="relative mb-8">
-      <div className="w-24 h-24 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Bot size={40} className="text-indigo-600 animate-pulse" />
-      </div>
-    </div>
-    <h3 className="text-2xl font-bold text-slate-800 tracking-tight text-center px-4">Analyzing every detail...</h3>
-    <p className="mt-3 text-slate-500 max-w-sm text-center font-medium leading-relaxed px-6 text-sm md:text-base">
-      I&apos;m breaking down the file into simple bits so I can explain it to you clearly.
-    </p>
-  </div>
-);
-
-const ErrorState = ({ error, onRetry }: { error: string, onRetry: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-16 text-center animate-in slide-in-from-top-4 duration-300 max-w-lg mx-auto bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl px-8">
-    <div className="bg-red-50 p-6 rounded-full mb-6">
-      <AlertCircle size={48} className="text-red-500" />
-    </div>
-    <h3 className="text-2xl font-bold text-slate-900 mb-3">Something didn&apos;t work</h3>
-    <p className="text-slate-600 mb-8 text-sm md:text-base leading-relaxed">{error}</p>
-    <button 
-      onClick={onRetry}
-      className="w-full flex items-center justify-center gap-2 px-10 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all font-bold shadow-xl active:scale-95"
-    >
-      <RefreshCcw size={18} />
-      Try another file
-    </button>
-  </div>
-);
 
 export default function App() {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<AnalysisStatus>(AnalysisStatus.IDLE);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [apiKeyMissing, setApiKeyMissing] = useState(false);
   
+  // API Key Management - Default to empty unless explicitly provided
+  const [userApiKey, setUserApiKey] = useState<string>(localStorage.getItem('omni_api_key') || '');
+  const [showSettings, setShowSettings] = useState(false);
+  const [isProMode, setIsProMode] = useState(false);
+
+  // Chat State
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isChatting, setIsChatting] = useState(false);
@@ -67,34 +29,27 @@ export default function App() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check multiple possible locations for the API key in the browser context
-    const env = (window as any).process?.env || {};
-    const key = env.API_KEY || env.NEXT_PUBLIC_API_KEY || env.VITE_API_KEY;
-    
-    if (!key || key === 'undefined' || key === '') {
-      setApiKeyMissing(true);
+    // Check if any key exists (Local Storage or Vercel Environment)
+    const envKey = (window as any).process?.env?.API_KEY;
+    if ((envKey && envKey !== 'undefined' && envKey !== '') || (userApiKey && userApiKey.trim() !== '')) {
+      setIsProMode(true);
     } else {
-      setApiKeyMissing(false);
+      setIsProMode(false);
     }
-  }, []);
+  }, [userApiKey]);
 
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('omni_api_key', userApiKey.trim());
+    setShowSettings(false);
+    // Use a light refresh-like state update instead of window.reload for better UX
+    const hasKeyNow = userApiKey.trim() !== '';
+    setIsProMode(hasKeyNow);
   };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
-
-    if (selectedFile.size > 20 * 1024 * 1024) {
-      setError("This file is a bit too big for me to handle (limit is 20MB). Maybe try a smaller version?");
-      setStatus(AnalysisStatus.ERROR);
-      return;
-    }
 
     setFile(selectedFile);
     setStatus(AnalysisStatus.LOADING);
@@ -102,15 +57,28 @@ export default function App() {
     setMessages([]);
 
     try {
-      const base64 = await fileToBase64(selectedFile);
-      const mime = getSafeMimeType(selectedFile);
-      const analysis = await analyzeFile(selectedFile);
-      chatSessionRef.current = createChatSession(base64, mime, selectedFile.name);
-      setResult(analysis);
+      if (isProMode) {
+        // AI POWERED ANALYSIS (Requires User/Env Key)
+        try {
+          const analysis = await analyzeFile(selectedFile);
+          const base64 = await fileToBase64(selectedFile);
+          const mime = getSafeMimeType(selectedFile);
+          chatSessionRef.current = createChatSession(base64, mime, selectedFile.name);
+          setResult(analysis);
+        } catch (aiErr) {
+          console.warn("AI Analysis failed, falling back to signature analysis:", aiErr);
+          const fallback = await analyzeFileHardcoded(selectedFile);
+          setResult(fallback);
+        }
+      } else {
+        // HARDCODED FREE ANALYSIS (No Key Needed)
+        const analysis = await analyzeFileHardcoded(selectedFile);
+        setResult(analysis);
+      }
       setStatus(AnalysisStatus.SUCCESS);
     } catch (err: any) {
       console.error(err);
-      setError("I'm having a little trouble reading this file. Please make sure your API key is correct and valid.");
+      setError("Something went wrong during analysis. Please try again.");
       setStatus(AnalysisStatus.ERROR);
     }
   };
@@ -126,9 +94,9 @@ export default function App() {
 
     try {
       const response = await chatSessionRef.current.sendMessage({ message: userText });
-      setMessages(prev => [...prev, { role: 'model', text: response.text || "I processed that, but I don't have a clear answer." }]);
+      setMessages(prev => [...prev, { role: 'model', text: response.text || "I've analyzed that, but I have no specific commentary." }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'model', text: "My connection flickered! Could you ask that again?" }]);
+      setMessages(prev => [...prev, { role: 'model', text: "The AI session expired or the API key is invalid. Please check your settings." }]);
     } finally {
       setIsChatting(false);
     }
@@ -145,124 +113,182 @@ export default function App() {
 
   const getVerdictStyle = (verdict: string) => {
     switch (verdict) {
-      case 'SAFE': return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: <ShieldCheck size={40} />, label: 'Safe to Open' };
-      case 'CAUTION': return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: <AlertTriangle size={40} />, label: 'Proceed with Caution' };
-      case 'DANGER': return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: <ShieldAlert size={40} />, label: 'Dangerous File' };
-      default: return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', icon: <Info size={40} />, label: 'Analysis Complete' };
+      case 'SAFE': return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', icon: <ShieldCheck size={40} />, label: 'Safe' };
+      case 'CAUTION': return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', icon: <AlertTriangle size={40} />, label: 'Caution' };
+      case 'DANGER': return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200', icon: <ShieldAlert size={40} />, label: 'Danger' };
+      default: return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', icon: <Info size={40} />, label: 'Analyzed' };
     }
   };
 
-  if (apiKeyMissing) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white rounded-[2.5rem] p-12 max-w-lg w-full text-center shadow-2xl border border-slate-100">
-          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8">
-            <KeyRound size={40} className="text-amber-500" />
-          </div>
-          <h1 className="text-3xl font-black text-slate-900 mb-4">API Key Required</h1>
-          <p className="text-slate-600 mb-8 leading-relaxed font-medium">
-            To use OmniAnalyze, you need to set your <span className="text-indigo-600 font-bold">API_KEY</span> in your Vercel Environment Variables.
-          </p>
-          <div className="p-4 bg-slate-50 rounded-2xl text-xs font-mono text-slate-400 text-left border border-slate-100">
-            Vercel Dashboard &gt; Settings &gt; Environment Variables &gt; Add API_KEY
-          </div>
-          <p className="mt-6 text-xs text-slate-400 font-medium">
-            Crucial: You must <span className="text-indigo-600 font-bold">Redeploy</span> the project after adding the key for it to take effect.
-          </p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-8 flex items-center justify-center gap-2 mx-auto px-8 py-3 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold active:scale-95"
-          >
-            <RefreshCcw size={16} />
-            Refresh App
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#fafbff] text-slate-900 flex flex-col font-sans overflow-x-hidden">
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 md:gap-3 cursor-pointer group" onClick={reset}>
-            <div className="bg-indigo-600 p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-lg shadow-indigo-500/30 group-hover:scale-110 transition-transform">
+    <div className="min-h-screen bg-[#fcfdfe] text-slate-900 flex flex-col font-sans">
+      {/* Header */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4">
+        <div className="max-w-6xl mx-auto h-16 md:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={reset}>
+            <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-200">
               <FileSearch size={24} className="text-white" />
             </div>
-            <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900">Omni<span className="text-indigo-600">Analyze</span></span>
+            <span className="text-xl font-black tracking-tight">Omni<span className="text-indigo-600">Analyze</span></span>
           </div>
-          <button onClick={reset} className="text-xs md:text-sm font-bold px-4 py-2 bg-slate-50 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-all">Start Over</button>
+          
+          <div className="flex items-center gap-4">
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black tracking-widest transition-all ${isProMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+              {isProMode ? <Sparkles size={12} fill="white" /> : <Shield size={12} />}
+              {isProMode ? 'PRO AI ACTIVE' : 'FREE SIGNATURE MODE'}
+            </div>
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2.5 hover:bg-slate-100 rounded-2xl transition-all active:scale-90 border border-slate-100"
+              title="Settings & API Key"
+            >
+              <Settings size={20} className="text-slate-500" />
+            </button>
+          </div>
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12 flex-grow w-full">
-        {status === AnalysisStatus.IDLE && (
-          <div className="text-center mb-12 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight px-2">
-              Upload any file. <br /> 
-              I&apos;ll explain it <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">simply.</span>
-            </h1>
-            <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto font-medium leading-relaxed px-4">
-              From confusing code to strange documents, I&apos;ll tell you what they really are and if they&apos;re safe.
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-8 md:p-10 max-w-md w-full shadow-2xl border border-slate-100 scale-in-center">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 rounded-xl"><Zap className="text-indigo-600" size={20} /></div>
+                <h2 className="text-xl font-black">AI Configuration</h2>
+              </div>
+              <button onClick={() => setShowSettings(false)} className="text-slate-400 hover:text-slate-600 p-2">✕</button>
+            </div>
+            
+            <p className="text-sm text-slate-500 mb-8 font-medium leading-relaxed">
+              OmniAnalyze works for <span className="text-slate-900 font-bold">free</span> using local signatures. For deep content analysis and AI chat, please provide your own Gemini API Key.
             </p>
 
-            <div className="relative group max-w-2xl mx-auto mt-8 md:mt-12">
-              <input 
-                type="file" 
-                onChange={handleFileChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                aria-label="Upload file for analysis"
-              />
-              <div className="bg-white border-4 border-dashed border-slate-200 rounded-[2.5rem] md:rounded-[3.5rem] p-12 md:p-24 flex flex-col items-center justify-center transition-all group-hover:border-indigo-400 group-hover:bg-indigo-50/10 shadow-xl shadow-slate-200/40">
-                <div className="w-16 h-16 md:w-24 md:h-24 bg-indigo-50 rounded-[1.5rem] md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 transition-transform group-hover:scale-110 group-hover:rotate-3 shadow-inner">
-                  <Upload size={40} className="text-indigo-600" />
+            <form onSubmit={handleSaveKey} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Your Google Gemini Key</label>
+                <div className="relative">
+                  <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input 
+                    type="password"
+                    value={userApiKey}
+                    onChange={(e) => setUserApiKey(e.target.value)}
+                    placeholder="Enter API Key..."
+                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:border-indigo-600 focus:bg-white outline-none transition-all font-mono text-sm"
+                  />
                 </div>
-                <p className="text-xl md:text-3xl font-extrabold text-slate-900 mb-2">Initialize Analysis</p>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">Drag & drop or tap to browse</p>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-xl">
+                  {userApiKey ? 'Activate Pro Mode' : 'Switch to Free Mode'}
+                </button>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-center text-xs text-indigo-600 font-black uppercase tracking-widest hover:underline py-2">
+                  Get Free API Key from Google →
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-5xl mx-auto px-4 py-12 flex-grow w-full">
+        {status === AnalysisStatus.IDLE && (
+          <div className="text-center py-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="mb-6 flex justify-center">
+               <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-100">
+                 Universal File Inspector
+               </span>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-8 tracking-tight leading-tight">
+              Safety check <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">anything instantly.</span>
+            </h1>
+            <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto font-medium mb-12 leading-relaxed">
+              Upload any file and I'll tell you if it's dangerous or what's inside. 
+              Works with or without AI.
+            </p>
+
+            <div className="relative group max-w-xl mx-auto">
+              <input type="file" onChange={handleFileChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+              <div className="bg-white border-4 border-dashed border-slate-200 rounded-[3rem] p-16 flex flex-col items-center justify-center transition-all group-hover:border-indigo-400 group-hover:bg-indigo-50/10 shadow-xl shadow-slate-100">
+                <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-inner">
+                  <Upload size={32} className="text-indigo-600" />
+                </div>
+                <p className="text-2xl font-black text-slate-900">Choose File</p>
+                <p className="text-slate-400 text-xs font-black mt-2 uppercase tracking-[0.2em]">PDF • HTML • EXE • JS • ZIP</p>
               </div>
             </div>
           </div>
         )}
 
-        {status === AnalysisStatus.LOADING && <LoadingState />}
-        {status === AnalysisStatus.ERROR && <ErrorState error={error!} onRetry={reset} />}
+        {status === AnalysisStatus.LOADING && (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="relative mb-8">
+              <div className="w-20 h-20 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 bg-indigo-600 rounded-full animate-ping"></div>
+              </div>
+            </div>
+            <h3 className="text-2xl font-black text-slate-800">Reading file signatures...</h3>
+            <p className="text-slate-500 font-medium mt-2">Performing deep inspection {isProMode ? 'with AI' : 'locally'}.</p>
+          </div>
+        )}
+
+        {status === AnalysisStatus.ERROR && (
+          <div className="max-w-md mx-auto bg-white rounded-[2.5rem] p-10 border border-red-100 text-center shadow-2xl animate-in zoom-in-95">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={32} className="text-red-500" />
+            </div>
+            <h3 className="text-xl font-black mb-2">Analysis Interrupted</h3>
+            <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed">{error}</p>
+            <button onClick={reset} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-95 transition-all">Try Again</button>
+          </div>
+        )}
 
         {status === AnalysisStatus.SUCCESS && result && (
-          <div className="space-y-8 md:space-y-12 animate-in fade-in zoom-in-95 duration-500 pb-20">
-            <div className={`rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-14 border-2 ${getVerdictStyle(result.verdict).bg} ${getVerdictStyle(result.verdict).border} shadow-2xl flex flex-col md:flex-row items-center gap-8 md:gap-12`}>
-              <div className={`w-20 h-20 md:w-28 md:h-28 rounded-3xl md:rounded-[2.5rem] flex items-center justify-center shrink-0 ${getVerdictStyle(result.verdict).bg} border-4 border-white shadow-xl`}>
+          <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500 pb-20">
+            {/* Verdict Card */}
+            <div className={`rounded-[3rem] p-8 md:p-12 border-2 ${getVerdictStyle(result.verdict).bg} ${getVerdictStyle(result.verdict).border} shadow-2xl flex flex-col md:flex-row items-center gap-10`}>
+              <div className="w-28 h-28 rounded-[2rem] flex items-center justify-center shrink-0 bg-white shadow-xl border-4 border-white/50">
                 {React.cloneElement(getVerdictStyle(result.verdict).icon as React.ReactElement<any>, { className: getVerdictStyle(result.verdict).text })}
               </div>
-              <div className="text-center md:text-left space-y-3 flex-grow">
-                <span className={`text-[10px] md:text-xs font-black uppercase tracking-[0.2em] px-3 py-1 bg-white/50 rounded-full ${getVerdictStyle(result.verdict).text}`}>{getVerdictStyle(result.verdict).label}</span>
-                <h2 className="text-2xl md:text-4xl font-black text-slate-900 leading-tight">{result.humanVerdict}</h2>
-                <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm md:text-base text-slate-600 font-bold">
-                  <span className="flex items-center gap-1.5"><FileText size={16} /> {file?.name}</span>
-                  <span className="text-slate-300">|</span>
-                  <span>{formatBytes(file?.size || 0)}</span>
+              <div className="text-center md:text-left flex-grow">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-4">
+                   <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full ${getVerdictStyle(result.verdict).text} bg-white border border-current shadow-sm`}>
+                     {getVerdictStyle(result.verdict).label}
+                   </span>
+                   <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full bg-white/50 text-slate-500 border border-slate-200">
+                     {isProMode ? 'Deep AI' : 'Signature Scan'}
+                   </span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">{result.humanVerdict}</h2>
+                <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start text-slate-500 font-bold text-sm">
+                  <div className="flex items-center gap-1.5 bg-white/40 px-3 py-1 rounded-lg border border-slate-200/50"><FileText size={16} /> {file?.name}</div>
+                  <div className="flex items-center gap-1.5 bg-white/40 px-3 py-1 rounded-lg border border-slate-200/50">{formatBytes(file?.size || 0)}</div>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-              <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-xl group hover:border-indigo-100 transition-colors">
-                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-50 rounded-2xl group-hover:scale-110 transition-transform"><Info size={24} className="text-blue-600" /></div>
-                  The Big Picture
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl group hover:border-indigo-100 transition-all">
+                <h3 className="text-xl font-black mb-6 flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-50 rounded-2xl group-hover:scale-110 transition-transform"><Info className="text-indigo-600" size={24} /></div>
+                  Analysis Summary
                 </h3>
-                <p className="text-base md:text-xl text-slate-600 leading-relaxed font-medium">{result.simpleExplanation}</p>
+                <p className="text-slate-600 leading-relaxed font-medium text-lg">{result.simpleExplanation}</p>
               </div>
-
-              <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-slate-100 shadow-xl group hover:border-indigo-100 transition-colors">
-                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
-                  <div className="p-2.5 bg-indigo-50 rounded-2xl group-hover:scale-110 transition-transform"><CheckCircle2 size={24} className="text-indigo-600" /></div>
-                  Recommended Steps
+              <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl group hover:border-indigo-100 transition-all">
+                <h3 className="text-xl font-black mb-6 flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-50 rounded-2xl group-hover:scale-110 transition-transform"><CheckCircle2 className="text-emerald-600" size={24} /></div>
+                  Recommendations
                 </h3>
-                <ul className="space-y-4 md:space-y-6">
+                <ul className="space-y-4">
                   {result.solutions.map((s, i) => (
-                    <li key={i} className="flex items-start gap-4 text-slate-700 font-bold text-base md:text-lg">
-                      <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                        <ArrowRight size={14} className="text-indigo-600" />
+                    <li key={i} className="flex gap-4 text-slate-700 font-bold text-base md:text-lg">
+                      <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center shrink-0 mt-1">
+                        <ArrowRight size={14} className="text-slate-400" />
                       </div>
                       {s}
                     </li>
@@ -271,79 +297,106 @@ export default function App() {
               </div>
             </div>
 
-            <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col h-[600px] md:h-[750px]">
-              <div className="p-6 md:p-10 border-b border-slate-50 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <MessageSquare size={24} className="text-white" />
-                  </div>
-                  <div>
-                    <h4 className="font-black text-slate-900 text-base md:text-lg">Ask me anything</h4>
-                    <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest">Active Insight Mode</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-grow overflow-y-auto p-4 md:p-10 space-y-6 md:space-y-8 bg-slate-50/20">
-                {messages.length === 0 && (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6">
-                    <Bot size={48} className="text-indigo-100" />
-                    <p className="text-xl font-black text-slate-800">Ready to chat.</p>
-                  </div>
-                )}
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex gap-3 max-w-[92%] md:max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center shadow-md ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white border text-indigo-600'}`}>
-                        {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
-                      </div>
-                      <div className={`p-5 rounded-[1.5rem] text-sm md:text-lg font-medium shadow-sm ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white text-slate-800'}`}>
-                        {msg.text}
-                      </div>
+            {/* Chat (Pro Only) or Promo (Free Only) */}
+            {isProMode ? (
+              <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col h-[700px] animate-in slide-in-from-bottom-10 duration-500">
+                <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <MessageSquare size={24} className="text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-lg">OmniAI File Assistant</h4>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500">Pro Context Insight</p>
                     </div>
                   </div>
-                ))}
-                {isChatting && <div className="flex justify-start items-center gap-2 p-4 text-slate-400 font-bold italic animate-pulse">
-                  <Bot size={18} /> 
-                  Thinking...
-                </div>}
-                <div ref={chatEndRef} />
-              </div>
-
-              <form onSubmit={handleSendMessage} className="p-6 md:p-10 bg-white border-t border-slate-50">
-                <div className="relative flex items-center gap-4">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="Type your question..."
-                    disabled={isChatting}
-                    className="w-full bg-slate-50 border-2 border-transparent rounded-2xl md:rounded-[2.2rem] pl-6 md:pl-8 pr-14 md:pr-20 py-4 md:py-6 text-sm md:text-xl font-bold focus:outline-none focus:border-indigo-600 focus:bg-white transition-all shadow-inner"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!inputMessage.trim() || isChatting}
-                    className="absolute right-2 md:right-3 p-3.5 md:p-5 bg-indigo-600 text-white rounded-xl md:rounded-[1.8rem] hover:bg-indigo-700 disabled:bg-slate-200 transition-all active:scale-90"
-                  >
-                    <Send size={22} />
-                  </button>
                 </div>
-              </form>
-            </div>
+
+                <div className="flex-grow overflow-y-auto p-8 space-y-8 scroll-smooth">
+                  {messages.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-300">
+                      <Bot size={64} className="mb-6 opacity-20" />
+                      <p className="text-xl font-black text-slate-400">Ask me anything about the content of this file.</p>
+                    </div>
+                  )}
+                  {messages.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white border text-indigo-600 shadow-sm'}`}>
+                           {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
+                         </div>
+                         <div className={`p-5 rounded-3xl text-base md:text-lg font-medium shadow-sm leading-relaxed ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white text-slate-800 border border-slate-100'}`}>
+                          {msg.text}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {isChatting && (
+                    <div className="flex justify-start items-center gap-3 p-4">
+                      <div className="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center animate-bounce">
+                        <Bot size={16} className="text-indigo-400" />
+                      </div>
+                      <span className="text-xs font-black uppercase tracking-widest text-indigo-400">Thinking...</span>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <form onSubmit={handleSendMessage} className="p-8 border-t border-slate-50 bg-white">
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      placeholder="Ask a question about this file..."
+                      disabled={isChatting}
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-[2rem] pl-8 pr-20 py-6 text-lg font-bold outline-none focus:bg-white focus:border-indigo-600 focus:shadow-2xl focus:shadow-indigo-100 transition-all"
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={!inputMessage.trim() || isChatting} 
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-indigo-600 text-white p-4 rounded-2xl hover:bg-indigo-700 disabled:opacity-20 active:scale-90 transition-all shadow-lg"
+                    >
+                      <Send size={20} />
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-[3rem] p-12 text-white text-center shadow-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-150 transition-transform duration-700">
+                    <Zap size={120} fill="white" />
+                 </div>
+                 <div className="relative z-10">
+                   <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <Sparkles size={32} fill="white" />
+                   </div>
+                   <h3 className="text-3xl font-black mb-4">Unlock AI Deep Analysis</h3>
+                   <p className="text-white/80 font-bold text-lg max-w-lg mx-auto mb-10 leading-relaxed">
+                     Switch to Pro Mode to use Google Gemini for deep content inspection, suspicious code detection, and interactive chat.
+                   </p>
+                   <button 
+                    onClick={() => setShowSettings(true)}
+                    className="bg-white text-indigo-600 px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-slate-50 transition-all active:scale-95 shadow-xl shadow-indigo-900/20"
+                   >
+                     Setup My API Key
+                   </button>
+                 </div>
+              </div>
+            )}
           </div>
         )}
       </main>
 
-      <footer className="py-12 border-t border-slate-100 text-center bg-white">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-4">
-           <div className="bg-slate-50 px-6 py-2 rounded-full border border-slate-100">
-             <p className="text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-widest">
-               OmniAnalyze • Built to Protect • 2024
-             </p>
-           </div>
-           <p className="text-indigo-600 font-black text-xs md:text-sm uppercase tracking-tighter">
-             Designed and Developed with Gemini AI
-           </p>
+      <footer className="py-16 border-t border-slate-50 text-center bg-white">
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex items-center gap-2 opacity-30 grayscale grayscale-100">
+             <Shield size={16} />
+             <span className="text-xs font-black uppercase tracking-widest">Local Integrity Protection</span>
+          </div>
+          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
+            OmniAnalyze • Built with Privacy First • 2024
+          </p>
         </div>
       </footer>
     </div>
