@@ -7,17 +7,15 @@ export const analyzeFile = async (file: File) => {
   const base64Data = await fileToBase64(file);
   const mimeType = getSafeMimeType(file);
 
-  const prompt = `You are a helpful and honest friend who is an expert at computers. 
+  const prompt = `You are an elite security researcher. 
   I'm giving you a file named "${file.name}". 
-  Tell me exactly what it is in a way that anyone could understand. 
+  Note: If the file content appears binary but is sent as text, analyze its structure or signatures.
   
-  Most importantly: Is it safe? 
-  - If it's a normal document/image, say it's SAFE.
-  - If it's something weird or I should be a bit careful, say CAUTION.
-  - If it looks like a virus, malware, or something that could hurt my computer, say DANGER.
-  
-  Explain WHY you gave that verdict like you're talking to a family member. 
-  Don't use too much technical jargon. If it's dangerous, tell me exactly what to do (solutions).
+  Provide:
+  1. A clear human verdict: SAFE, CAUTION, or DANGER.
+  2. A friendly explanation for a non-technical person.
+  3. Technical breakdown for experts.
+  4. Actionable steps.
   
   Format your response as a JSON object strictly following this schema.`;
 
@@ -43,25 +41,23 @@ export const analyzeFile = async (file: File) => {
           type: Type.OBJECT,
           properties: {
             verdict: { type: Type.STRING, enum: ['SAFE', 'CAUTION', 'DANGER'] },
-            humanVerdict: { type: Type.STRING, description: "A one-sentence human-like verdict (e.g., 'This looks perfectly safe to open!')" },
-            summary: { type: Type.STRING, description: "What is this file exactly?" },
-            simpleExplanation: { type: Type.STRING, description: "A simple, friendly explanation of what's inside." },
+            humanVerdict: { type: Type.STRING },
+            summary: { type: Type.STRING },
+            simpleExplanation: { type: Type.STRING },
             isDangerous: { type: Type.BOOLEAN },
-            whyItsDangerous: { type: Type.STRING, description: "If dangerous, explain why in simple terms." },
+            whyItsDangerous: { type: Type.STRING },
             solutions: {
               type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "What should the user do next? Simple steps."
+              items: { type: Type.STRING }
             },
-            technicalDetails: { type: Type.STRING, description: "The nitty-gritty details for someone who wants to know more (Markdown format)." },
+            technicalDetails: { type: Type.STRING },
             fileType: { type: Type.STRING },
             metadata: { 
               type: Type.OBJECT, 
-              description: "Technical properties of the file",
               properties: {
-                suggestedApp: { type: Type.STRING, description: "The best app to open this file" },
-                lastModified: { type: Type.STRING, description: "Estimated or extracted date" },
-                securityLevel: { type: Type.STRING, description: "High level safety description" }
+                suggestedApp: { type: Type.STRING },
+                lastModified: { type: Type.STRING },
+                securityLevel: { type: Type.STRING }
               },
               required: ["suggestedApp", "securityLevel"]
             }
@@ -85,13 +81,9 @@ export const createChatSession = (fileData: string, mimeType: string, fileName: 
   return ai.chats.create({
     model: "gemini-3-pro-preview",
     config: {
-      systemInstruction: `You are a friendly, human-like expert helping someone understand a file named "${fileName}". 
-      - Talk like a real person, not a robot. Use "I think," "You should," and "Don't worry."
-      - If the user asks if the file is good, be direct. "Yes, it's fine" or "No, it's actually quite dangerous because..."
-      - Explain complex things using simple analogies.
-      - If they ask for solutions, give them step-by-step advice a non-tech person can follow.
-      - Stay focused ONLY on this file. If they ask about other things, politely bring them back to the file.
-      - Your goal is to make them feel safe and informed.`,
+      systemInstruction: `You are a friendly technical assistant. You are helping a user with a file named "${fileName}". 
+      You have access to the file's contents. If the user asks technical questions, answer accurately. 
+      If they are confused, use simple analogies. Always prioritize their digital safety.`,
     },
     history: [
       {
@@ -103,7 +95,7 @@ export const createChatSession = (fileData: string, mimeType: string, fileName: 
       },
       {
         role: 'model',
-        parts: [{ text: `Hey there! I've taken a good look at "${fileName}". I'm ready to explain everything to you in simple terms. What's on your mind?` }],
+        parts: [{ text: `Hello! I've reviewed the file "${fileName}". I can help you understand its structure, content, and safety. What would you like to know first?` }],
       }
     ]
   });

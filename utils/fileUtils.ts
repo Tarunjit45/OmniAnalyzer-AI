@@ -16,21 +16,36 @@ export const fileToBase64 = (file: File): Promise<string> => {
 };
 
 /**
- * Gets the readable mime type or a fallback.
+ * Gets the readable mime type or a fallback that Gemini supports.
+ * Gemini 3 Pro supports common document, image, and text formats.
  */
 export const getSafeMimeType = (file: File): string => {
   const type = file.type;
-  if (type) return type;
   
-  // Fallback based on extension
+  // If the browser detected a type and it's not the generic octet-stream, use it
+  if (type && type !== 'application/octet-stream') return type;
+  
+  // Manual mapping for common extensions that might be missed
   const ext = file.name.split('.').pop()?.toLowerCase();
   switch (ext) {
     case 'pdf': return 'application/pdf';
     case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    case 'html': return 'text/html';
-    case 'txt': return 'text/plain';
-    case 'exe': return 'application/x-msdownload';
-    default: return 'application/octet-stream';
+    case 'html': case 'htm': return 'text/html';
+    case 'txt': case 'md': case 'json': return 'text/plain';
+    case 'js': return 'application/javascript';
+    case 'ts': return 'application/x-typescript';
+    case 'png': return 'image/png';
+    case 'jpg': case 'jpeg': return 'image/jpeg';
+    case 'webp': return 'image/webp';
+    case 'heic': return 'image/heic';
+    case 'heif': return 'image/heif';
+    default: 
+      // Fallback for unknown files to text/plain. 
+      // If it's truly a binary file like an .exe, Gemini prefers 
+      // text-based files for content analysis, but if we must send binary,
+      // text/plain is safer for the API's input validation than octet-stream 
+      // when we want content inspection.
+      return 'text/plain'; 
   }
 };
 

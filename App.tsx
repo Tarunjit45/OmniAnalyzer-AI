@@ -20,7 +20,8 @@ import {
   AlertTriangle,
   ShieldAlert,
   ArrowRight,
-  RefreshCcw
+  RefreshCcw,
+  KeyRound
 } from 'lucide-react';
 
 const LoadingState = () => (
@@ -60,12 +61,19 @@ export default function App() {
   const [status, setStatus] = useState<AnalysisStatus>(AnalysisStatus.IDLE);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
   
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isChatting, setIsChatting] = useState(false);
   const chatSessionRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!process.env.API_KEY) {
+      setApiKeyMissing(true);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -139,6 +147,26 @@ export default function App() {
       default: return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', icon: <Info className="w-6 h-6" />, label: 'Analysis Complete' };
     }
   };
+
+  if (apiKeyMissing) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white rounded-[2.5rem] p-12 max-w-lg w-full text-center shadow-2xl border border-slate-100">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-8">
+            <KeyRound className="w-10 h-10 text-amber-500" />
+          </div>
+          <h1 className="text-3xl font-black text-slate-900 mb-4">API Key Required</h1>
+          <p className="text-slate-600 mb-8 leading-relaxed font-medium">
+            To use OmniAnalyze, you need to set your <span className="text-indigo-600 font-bold">API_KEY</span> in the environment variables. 
+            Please check your Vercel project settings.
+          </p>
+          <div className="p-4 bg-slate-50 rounded-2xl text-xs font-mono text-slate-400 text-left border border-slate-100">
+            Settings > Environment Variables > API_KEY
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#fafbff] text-slate-900 selection:bg-indigo-100 flex flex-col font-sans overflow-x-hidden">
@@ -285,7 +313,7 @@ export default function App() {
                   <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
                     <div className={`flex gap-3 md:gap-5 max-w-[92%] md:max-w-[80%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                       <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex-shrink-0 flex items-center justify-center shadow-md ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-100 text-indigo-600'}`}>
-                        {msg.role === 'user' ? <User size={18} md:size={22} /> : <Bot size={18} md:size={22} />}
+                        {msg.role === 'user' ? <User size={20} /> : <Bot size={20} />}
                       </div>
                       <div className={`p-5 md:p-7 rounded-[1.5rem] md:rounded-[2rem] text-sm md:text-lg leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-slate-900 text-white rounded-tr-none shadow-indigo-200/50' : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'}`}>
                         {msg.text}
@@ -297,7 +325,7 @@ export default function App() {
                   <div className="flex justify-start">
                      <div className="flex gap-4 md:gap-5">
                       <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-indigo-400 shadow-sm">
-                        <Bot size={18} md:size={22} />
+                        <Bot size={20} />
                       </div>
                       <div className="bg-white border border-slate-100 p-5 md:p-7 rounded-[1.5rem] md:rounded-[2rem] rounded-tl-none shadow-sm flex gap-1.5 items-center">
                         <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-indigo-400 rounded-full animate-bounce"></div>
@@ -326,7 +354,7 @@ export default function App() {
                     className="absolute right-2 md:right-3 p-3.5 md:p-5 bg-indigo-600 text-white rounded-xl md:rounded-[1.8rem] hover:bg-indigo-700 disabled:bg-slate-200 transition-all shadow-xl shadow-indigo-500/30 active:scale-90"
                     aria-label="Send message"
                   >
-                    <Send size={20} md:size={24} />
+                    <Send size={22} />
                   </button>
                 </div>
               </form>
@@ -357,7 +385,7 @@ export default function App() {
              </p>
            </div>
            <p className="text-indigo-600 font-black text-xs md:text-sm uppercase tracking-tighter">
-             Designed and Developed by <span className="text-slate-900">Senior Engineer</span>
+             Designed and Developed by <span className="text-slate-900">[Your Name]</span>
            </p>
            <div className="flex gap-4 mt-2">
              <div className="w-1 h-1 bg-slate-200 rounded-full"></div>

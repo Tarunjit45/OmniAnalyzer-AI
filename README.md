@@ -1,3 +1,4 @@
+
 # OmniAnalyze PRO
 
 A human-centric, high-intelligence file analysis tool powered by **Gemini 3 Pro**. Built to bridge the gap between complex file structures and human understanding.
@@ -13,7 +14,7 @@ OmniAnalyze doesn't just scan files; it explains them. Whether it's a suspicious
 - **Vercel Ready**: Pre-configured for instant deployment.
 
 ## 🛠️ Technical Stack
-- **Frontend**: React 19 (ES6+)
+- **Frontend**: React 19 (ESM)
 - **Styling**: Tailwind CSS
 - **AI Engine**: Google Gemini 3 Pro
 - **Icons**: Lucide React
@@ -27,4 +28,4 @@ OmniAnalyze doesn't just scan files; it explains them. Whether it's a suspicious
 
 ---
 **Built to Protect • 2024**
-*Designed and Developed by Senior Engineer*
+*Designed and Developed by [Your Name]*
