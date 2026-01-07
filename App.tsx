@@ -30,23 +30,23 @@ const LoadingState = () => (
         <Bot className="w-8 h-8 text-blue-600 animate-pulse" />
       </div>
     </div>
-    <h3 className="text-2xl font-bold text-slate-800 tracking-tight text-center">Reading your file carefully...</h3>
-    <p className="mt-3 text-slate-500 max-w-sm text-center font-medium leading-relaxed">
+    <h3 className="text-2xl font-bold text-slate-800 tracking-tight text-center px-4">Reading your file carefully...</h3>
+    <p className="mt-3 text-slate-500 max-w-sm text-center font-medium leading-relaxed px-6 text-sm md:text-base">
       I'm looking through every corner of this file to make sure I can explain it to you simply.
     </p>
   </div>
 );
 
 const ErrorState = ({ error, onRetry }: { error: string, onRetry: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-16 text-center animate-in zoom-in duration-300 max-w-lg mx-auto bg-white rounded-[2rem] border border-slate-100 shadow-xl">
+  <div className="flex flex-col items-center justify-center py-16 text-center animate-in zoom-in duration-300 max-w-lg mx-auto bg-white rounded-[2rem] border border-slate-100 shadow-xl px-6">
     <div className="bg-red-50 p-5 rounded-full mb-6">
       <AlertCircle className="w-12 h-12 text-red-500" />
     </div>
     <h3 className="text-2xl font-bold text-slate-900 mb-3">Something went wrong</h3>
-    <p className="text-slate-600 px-8 mb-8">{error}</p>
+    <p className="text-slate-600 mb-8 text-sm md:text-base">{error}</p>
     <button 
       onClick={onRetry}
-      className="px-10 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all font-bold shadow-xl active:scale-95"
+      className="w-full md:w-auto px-10 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all font-bold shadow-xl active:scale-95"
     >
       Try another file
     </button>
@@ -139,42 +139,42 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbff] text-slate-900 selection:bg-blue-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#fafbff] text-slate-900 selection:bg-blue-100 flex flex-col font-sans overflow-x-hidden">
       <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-slate-100">
-        <div className="max-w-5xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={reset}>
-            <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-500/30">
-              <FileSearch className="w-6 h-6 text-white" />
+        <div className="max-w-5xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={reset}>
+            <div className="bg-indigo-600 p-2 md:p-2.5 rounded-xl md:rounded-2xl shadow-lg shadow-indigo-500/30">
+              <FileSearch className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </div>
-            <span className="text-2xl font-black tracking-tight text-slate-900">Omni<span className="text-indigo-600">Analyze</span></span>
+            <span className="text-xl md:text-2xl font-black tracking-tight text-slate-900">Omni<span className="text-indigo-600">Analyze</span></span>
           </div>
-          <button onClick={reset} className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Start Over</button>
+          <button onClick={reset} className="text-xs md:text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Start Over</button>
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-12 flex-grow w-full">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-12 flex-grow w-full">
         {status === AnalysisStatus.IDLE && (
-          <div className="text-center mb-16 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            <h1 className="text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight">
+          <div className="text-center mb-12 space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-tight px-2">
               Is this file <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">Safe?</span> <br /> 
               Let's find out.
             </h1>
-            <p className="text-xl text-slate-500 max-w-xl mx-auto font-medium leading-relaxed">
+            <p className="text-lg md:text-xl text-slate-500 max-w-xl mx-auto font-medium leading-relaxed px-4">
               Upload any file and I'll explain it to you like a human. No confusing tech talk, just the truth.
             </p>
 
-            <div className="relative group max-w-2xl mx-auto mt-12">
+            <div className="relative group max-w-2xl mx-auto mt-8 md:mt-12">
               <input 
                 type="file" 
                 onChange={handleFileChange}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <div className="bg-white border-4 border-dashed border-slate-200 rounded-[3rem] p-20 flex flex-col items-center justify-center transition-all group-hover:border-indigo-400 group-hover:bg-indigo-50/20 shadow-2xl shadow-indigo-500/5">
-                <div className="w-24 h-24 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center mb-8 transition-transform group-hover:scale-110 group-hover:rotate-3">
-                  <Upload className="w-10 h-10 text-indigo-600" />
+              <div className="bg-white border-3 md:border-4 border-dashed border-slate-200 rounded-[2rem] md:rounded-[3rem] p-10 md:p-20 flex flex-col items-center justify-center transition-all group-hover:border-indigo-400 group-hover:bg-indigo-50/20 shadow-2xl shadow-indigo-500/5">
+                <div className="w-16 h-16 md:w-24 md:h-24 bg-indigo-50 rounded-[1.5rem] md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 transition-transform group-hover:scale-110 group-hover:rotate-3">
+                  <Upload className="w-8 h-8 md:w-10 md:h-10 text-indigo-600" />
                 </div>
-                <p className="text-2xl font-extrabold text-slate-900 mb-2">Drop your file here</p>
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">PDF, Word, Code, or even .EXE</p>
+                <p className="text-xl md:text-2xl font-extrabold text-slate-900 mb-2">Drop your file here</p>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] md:text-xs">PDF, Word, Code, or even .EXE</p>
               </div>
             </div>
           </div>
@@ -184,40 +184,40 @@ export default function App() {
         {status === AnalysisStatus.ERROR && <ErrorState error={error!} onRetry={reset} />}
 
         {status === AnalysisStatus.SUCCESS && result && (
-          <div className="space-y-10 animate-in fade-in zoom-in-95 duration-700 pb-20">
+          <div className="space-y-8 md:space-y-10 animate-in fade-in zoom-in-95 duration-700 pb-20">
             {/* Header / Verdict Card */}
-            <div className={`rounded-[3rem] p-8 md:p-12 border-2 ${getVerdictStyle(result.verdict).bg} ${getVerdictStyle(result.verdict).border} shadow-2xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-10`}>
-              <div className={`w-24 h-24 rounded-[2rem] flex items-center justify-center shrink-0 ${getVerdictStyle(result.verdict).bg} border-4 border-white shadow-lg`}>
-                {React.cloneElement(getVerdictStyle(result.verdict).icon, { className: `w-12 h-12 ${getVerdictStyle(result.verdict).text}` })}
+            <div className={`rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 border-2 ${getVerdictStyle(result.verdict).bg} ${getVerdictStyle(result.verdict).border} shadow-2xl shadow-slate-200/50 flex flex-col md:flex-row items-center gap-6 md:gap-10`}>
+              <div className={`w-16 h-16 md:w-24 md:h-24 rounded-2xl md:rounded-[2rem] flex items-center justify-center shrink-0 ${getVerdictStyle(result.verdict).bg} border-2 md:border-4 border-white shadow-lg`}>
+                {React.cloneElement(getVerdictStyle(result.verdict).icon, { className: `w-8 h-8 md:w-12 md:h-12 ${getVerdictStyle(result.verdict).text}` })}
               </div>
               <div className="text-center md:text-left space-y-2 flex-grow">
-                <span className={`text-xs font-black uppercase tracking-[0.2em] ${getVerdictStyle(result.verdict).text}`}>{getVerdictStyle(result.verdict).label}</span>
-                <h2 className="text-3xl md:text-4xl font-black text-slate-900 leading-tight">{result.humanVerdict}</h2>
-                <p className="text-lg text-slate-600 font-medium">{file?.name} ({formatBytes(file?.size || 0)})</p>
+                <span className={`text-[10px] md:text-xs font-black uppercase tracking-[0.2em] ${getVerdictStyle(result.verdict).text}`}>{getVerdictStyle(result.verdict).label}</span>
+                <h2 className="text-2xl md:text-4xl font-black text-slate-900 leading-tight">{result.humanVerdict}</h2>
+                <p className="text-sm md:text-lg text-slate-600 font-medium truncate max-w-[280px] md:max-w-full mx-auto md:mx-0">{file?.name} ({formatBytes(file?.size || 0)})</p>
               </div>
-              <button onClick={reset} className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all text-sm shadow-sm active:scale-95">Analyze New</button>
+              <button onClick={reset} className="w-full md:w-auto px-8 py-3 md:py-4 bg-white border border-slate-200 rounded-xl md:rounded-2xl font-bold hover:bg-slate-50 transition-all text-xs md:text-sm shadow-sm active:scale-95">Analyze New</button>
             </div>
 
             {/* Simple Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-100/50">
-                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 border border-slate-100 shadow-xl shadow-slate-100/50">
+                <h3 className="text-lg md:text-xl font-black text-slate-900 mb-4 md:mb-6 flex items-center gap-3">
                   <div className="p-2 bg-blue-50 rounded-xl"><Info className="w-5 h-5 text-blue-600" /></div>
                   What is this?
                 </h3>
-                <p className="text-lg text-slate-600 leading-relaxed font-medium">
+                <p className="text-base md:text-lg text-slate-600 leading-relaxed font-medium">
                   {result.simpleExplanation}
                 </p>
               </div>
 
-              <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-100/50">
-                <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-3">
+              <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 border border-slate-100 shadow-xl shadow-slate-100/50">
+                <h3 className="text-lg md:text-xl font-black text-slate-900 mb-4 md:mb-6 flex items-center gap-3">
                   <div className="p-2 bg-indigo-50 rounded-xl"><CheckCircle2 className="w-5 h-5 text-indigo-600" /></div>
                   What should I do?
                 </h3>
-                <ul className="space-y-4">
+                <ul className="space-y-3 md:space-y-4">
                   {result.solutions.map((s, i) => (
-                    <li key={i} className="flex items-start gap-3 text-slate-600 font-semibold text-lg">
+                    <li key={i} className="flex items-start gap-3 text-slate-600 font-semibold text-base md:text-lg">
                       <ArrowRight className="w-5 h-5 mt-1 text-indigo-400 shrink-0" />
                       {s}
                     </li>
@@ -226,42 +226,42 @@ export default function App() {
               </div>
             </div>
 
-            {/* Chat Area - Integrated and Simpler */}
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col h-[650px]">
-              <div className="p-8 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-md">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center">
-                    <MessageSquare className="w-5 h-5 text-white" />
+            {/* Chat Area */}
+            <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col h-[550px] md:h-[650px]">
+              <div className="p-6 md:p-8 border-b border-slate-50 flex items-center justify-between bg-white/50 backdrop-blur-md">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 rounded-xl md:rounded-2xl flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900">Talk with me about this file</h4>
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Human Assistant Active</p>
+                    <h4 className="font-black text-slate-900 text-sm md:text-base">Talk about this file</h4>
+                    <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-wider">Human Assistant Active</p>
                   </div>
                 </div>
                 <button onClick={() => setMessages([])} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                  <Trash2 size={20} />
+                  <Trash2 size={18} md:size={20} />
                 </button>
               </div>
 
-              <div className="flex-grow overflow-y-auto p-8 space-y-6 bg-slate-50/30">
+              <div className="flex-grow overflow-y-auto p-4 md:p-8 space-y-4 md:space-y-6 bg-slate-50/30">
                 {messages.length === 0 && (
-                  <div className="h-full flex flex-col items-center justify-center text-center p-12 space-y-6">
-                    <div className="w-20 h-20 bg-white rounded-full shadow-inner flex items-center justify-center border border-slate-100">
-                      <Bot className="w-10 h-10 text-indigo-200" />
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 md:p-12 space-y-4 md:space-y-6">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white rounded-full shadow-inner flex items-center justify-center border border-slate-100">
+                      <Bot className="w-8 h-8 md:w-10 md:h-10 text-indigo-200" />
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-lg font-bold text-slate-800">I'm here to help.</p>
-                      <p className="text-slate-500 font-medium max-w-xs">Ask me anything like "Is this a virus?" or "Explain the main text simply."</p>
+                    <div className="space-y-1 md:space-y-2">
+                      <p className="text-base md:text-lg font-bold text-slate-800">I'm here to help.</p>
+                      <p className="text-sm md:text-base text-slate-500 font-medium max-w-xs">Ask me anything like "Is this a virus?" or "Explain the main text simply."</p>
                     </div>
                   </div>
                 )}
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
-                    <div className={`flex gap-4 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      <div className={`w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center shadow-lg ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-100 text-indigo-600'}`}>
-                        {msg.role === 'user' ? <User size={18} /> : <Bot size={18} />}
+                    <div className={`flex gap-3 md:gap-4 max-w-[90%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <div className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex-shrink-0 flex items-center justify-center shadow-lg ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white border border-slate-100 text-indigo-600'}`}>
+                        {msg.role === 'user' ? <User size={14} md:size={18} /> : <Bot size={14} md:size={18} />}
                       </div>
-                      <div className={`p-5 rounded-[1.5rem] text-lg leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'}`}>
+                      <div className={`p-4 md:p-5 rounded-2xl md:rounded-[1.5rem] text-sm md:text-lg leading-relaxed shadow-sm font-medium ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'}`}>
                         {msg.text}
                       </div>
                     </div>
@@ -269,14 +269,14 @@ export default function App() {
                 ))}
                 {isChatting && (
                   <div className="flex justify-start">
-                     <div className="flex gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-indigo-400">
-                        <Bot size={18} />
+                     <div className="flex gap-3 md:gap-4">
+                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-indigo-400">
+                        <Bot size={14} md:size={18} />
                       </div>
-                      <div className="bg-white border border-slate-100 p-5 rounded-[1.5rem] rounded-tl-none shadow-sm flex gap-1">
-                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-75"></div>
-                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
+                      <div className="bg-white border border-slate-100 p-4 md:p-5 rounded-2xl md:rounded-[1.5rem] rounded-tl-none shadow-sm flex gap-1 items-center">
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-indigo-400 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-indigo-400 rounded-full animate-bounce delay-150"></div>
                       </div>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ export default function App() {
                 <div ref={chatEndRef} />
               </div>
 
-              <form onSubmit={handleSendMessage} className="p-8 bg-white border-t border-slate-50">
+              <form onSubmit={handleSendMessage} className="p-4 md:p-8 bg-white border-t border-slate-50">
                 <div className="relative flex items-center gap-3">
                   <input
                     type="text"
@@ -292,14 +292,14 @@ export default function App() {
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Ask me anything..."
                     disabled={isChatting}
-                    className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] pl-6 pr-16 py-5 text-lg font-bold focus:outline-none focus:border-indigo-600 focus:bg-white transition-all disabled:opacity-50"
+                    className="w-full bg-slate-50 border-2 border-transparent rounded-xl md:rounded-[1.5rem] pl-4 md:pl-6 pr-12 md:pr-16 py-3 md:py-5 text-base md:text-lg font-bold focus:outline-none focus:border-indigo-600 focus:bg-white transition-all disabled:opacity-50"
                   />
                   <button
                     type="submit"
                     disabled={!inputMessage.trim() || isChatting}
-                    className="absolute right-2 p-4 bg-indigo-600 text-white rounded-[1.2rem] hover:bg-indigo-700 disabled:bg-slate-200 transition-all shadow-xl active:scale-90"
+                    className="absolute right-1.5 p-2.5 md:p-4 bg-indigo-600 text-white rounded-lg md:rounded-[1.2rem] hover:bg-indigo-700 disabled:bg-slate-200 transition-all shadow-xl active:scale-90"
                   >
-                    <Send size={22} />
+                    <Send size={18} md:size={22} />
                   </button>
                 </div>
               </form>
@@ -307,11 +307,11 @@ export default function App() {
 
             {/* Secondary Technical Details */}
             <details className="group">
-              <summary className="flex items-center justify-center gap-2 cursor-pointer py-4 text-slate-400 hover:text-slate-600 font-bold uppercase tracking-widest text-xs transition-colors">
-                Show Technical Details (For Experts)
+              <summary className="flex items-center justify-center gap-2 cursor-pointer py-4 text-slate-400 hover:text-slate-600 font-bold uppercase tracking-widest text-[10px] md:text-xs transition-colors">
+                Technical Details (For Experts)
                 <ChevronRight size={14} className="group-open:rotate-90 transition-transform" />
               </summary>
-              <div className="mt-6 p-10 bg-slate-900 text-indigo-100 rounded-[2.5rem] font-mono text-sm leading-relaxed overflow-x-auto border border-white/5 whitespace-pre-wrap">
+              <div className="mt-6 p-6 md:p-10 bg-slate-900 text-indigo-100 rounded-2xl md:rounded-[2.5rem] font-mono text-[10px] md:text-sm leading-relaxed overflow-x-auto border border-white/5 whitespace-pre-wrap">
                 {result.technicalDetails}
               </div>
             </details>
@@ -319,8 +319,9 @@ export default function App() {
         )}
       </main>
 
-      <footer className="py-12 border-t border-slate-100 text-center text-slate-400 text-xs font-black uppercase tracking-widest bg-white">
-        <p>OmniAnalyze &bull; Built to Protect &bull; 2024</p>
+      <footer className="py-8 md:py-12 border-t border-slate-100 text-center text-slate-400 text-[10px] md:text-xs font-black uppercase tracking-widest bg-white">
+        <p className="px-4">OmniAnalyze • Built to Protect • 2024</p>
+        <p className="mt-2 text-indigo-400 px-4">Developed by [Your Name]</p>
       </footer>
     </div>
   );
